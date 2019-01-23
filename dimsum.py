@@ -3,6 +3,10 @@ os.environ['NLTK_DATA'] = os.getcwd() + '/nltk_data' #nltk data kit
 from textblob import TextBlob #dictionary
 from config import FILTER_WORDS
 
+logging.basicConfig()
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+
 ##############
 # KEYWORD DICTIONARIES
 GREETING_KEYWORDS = ("hello", "hi", "hey",)
@@ -12,6 +16,28 @@ def check_for_greeting(sentence):
     for word in sentence.words:
         if word.lower() in GREETING_KEYWORDS: #check if any of the user inputs includes a greeting
             return random.choice(GREETING_RESPONSES) #and return a random response
+
+RAND_RESPONSE = [
+    "okay, but about DIMSUM...",
+    "sounds good, but not as good as a good shumai.",
+    "mmm yeah",
+    "... sorry, wasn't listening, was too busy eating.",
+    "*washes chopsticks pensively*",
+]
+
+class UnacceptableUtteranceException(Exception):
+    # would've gotten blacklisted buddy
+    pass
+
+def starts_with_vowel(word):
+    # pronouns, a vs an
+    return True if word[0] in 'aeiou' else False
+
+def feedback(sentence):
+    #selects a response for input and returns
+    logger.info("Feedback: respond to %s", sentence)
+    resp = respond(sentence)
+    return resp
 
 # dimsum prioritizes dimsum before anything else!
 # so if we mention the bot, he will talk about dimsum
@@ -41,6 +67,19 @@ SELF_VERBS_WITH_ADJECTIVE = [
     "Nothing is as {adjective} as dimsum.",
     "How {adjective} is the restaurant next door?",
 ]
+
+# tfw there's no other specified case so we have to make a response from scratch
+def construct_response(pronoun, noun, verb):
+    resp = [] # got ourselves a sentence template!
+    if pronoun:
+        resp.append(pronoun)
+
+    # present tense
+    if verb:
+        verb_word = verb[0]
+        if verb_word in ('be', 'am', 'is', "'m"): # of form to-be
+            if pronoun.lower() == 'you': # talking about user
+                resp.append()
 
 def respond(sentence):
     cleaned = preprocess(sentence)
@@ -91,6 +130,8 @@ def find_pronoun(sentence):
         elif part_of_speech == 'PRP' and word.lower() == 'i':
             pronoun = 'You'
     return pronoun
+
+
 
 
 if __name__ == '__main__':
